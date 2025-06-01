@@ -4,13 +4,12 @@
 
 - Tech stack: Next.js, React, Tailwind & Shadcn UI
 - Authentication (Clerk)
-- Voice AI Assistant (Vapi)
 - LLM Integration (Gemini)
 
 
 ## Features
 
-- **Smart AI Assistant**: Engage in conversation with an AI that asks about your fitness goals, physical condition, and preferences
+- **Smart AI Assistant**: Engage with an AI that cares about your fitness goals, physical condition, and preferences
 - **Personalized Workout Plans**: Get custom exercise routines based on your fitness level, injuries, and goals
 - **Diet Recommendations**: Receive personalized meal plans accounting for your allergies and dietary preferences
 - **User Authentication**: Sign in with GitHub, Google, or email/password
