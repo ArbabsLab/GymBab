@@ -3,8 +3,10 @@ import { WebhookEvent } from "@clerk/nextjs/server";
 import { Webhook } from "svix";
 import { api } from "./_generated/api";
 import {httpAction} from "./_generated/server"
-const http = httpRouter()
+import { GoogleGenAI } from "@google/genai";
 
+const http = httpRouter()
+const ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY})
 http.route({
     path:"/webhook",
     method:"POST",
@@ -87,5 +89,118 @@ http.route({
 
 });
 
+function validateWorkoutPlan(plan: any) {
+  const validatedPlan = {
+    schedule: plan.schedule,
+    exercises: plan.exercises.map((exercise: any) => ({
+      day: exercise.day,
+      routines: exercise.routines.map((routine: any) => ({
+        name: routine.name,
+        sets: typeof routine.sets === "number" ? routine.sets : parseInt(routine.sets) || 1,
+        reps: typeof routine.reps === "number" ? routine.reps : parseInt(routine.reps) || 10,
+      })),
+    })),
+  };
+  return validatedPlan;
+}
+
+
+function validateDietPlan(plan: any) {
+  const validatedPlan = {
+    dailyCalories: plan.dailyCalories,
+    meals: plan.meals.map((meal: any) => ({
+      name: meal.name,
+      foods: meal.foods,
+    })),
+  };
+  return validatedPlan;
+}
+
+http.route({
+    path: "/generate-routine",
+    method: "POST",
+    handler: httpAction(async (ctx, req) =>{
+        try {
+            const payload = await req.json();
+
+            const{
+                user_id,
+                age,
+                height,
+                weight,
+                injuries,
+                workout_days,
+                fitness_goal,
+                fitness_level,
+                dietary_restrictions
+            } = payload
+
+            const workoutPrompt = `You are a fitness coach creating a personalized workout plan based on:
+                Age: ${age}
+                Height: ${height}
+                Weight: ${weight}
+                Injuries or limitations: ${injuries}
+                Available days for workout: ${workout_days}
+                Fitness goal: ${fitness_goal}
+                Fitness level: ${fitness_level}
+      
+      As a professional coach:
+      - Consider muscle group splits to avoid overtraining the same muscles on consecutive days
+      - Design exercises that match the fitness level and account for any injuries
+      - Structure the workouts to specifically target the user's fitness goal
+      
+      CRITICAL SCHEMA INSTRUCTIONS:
+      - Your output MUST contain ONLY the fields specified below, NO ADDITIONAL FIELDS
+      - "sets" and "reps" MUST be NUMBERS
+      - For example: "sets": 3, "reps": 10
+      - Use specific numbers like "reps": 12 or "reps": 15
+      - For cardio, use "sets": 1, "reps": 1 or another appropriate number
+      - NEVER include strings for numerical fields
+      - NEVER add extra fields not shown in the example below
+      
+      Return a JSON object with this EXACT structure:
+      {
+        "schedule": ["Monday", "Wednesday", "Friday"],
+        "exercises": [
+          {
+            "day": "Monday",
+            "routines": [
+              {
+                "name": "Exercise Name",
+                "sets": 3,
+                "reps": 10
+              }
+            ]
+          }
+        ]
+      }
+      
+      DO NOT add any fields that are not in this example. Your response must be a valid JSON object with no additional text.`;
+
+
+            const response = ai.models.generateContent({
+                model: "gemini-2.0-flash",
+                contents: "",
+                config: {
+                    temperature: 0.2,
+                    topP: 0.9,
+                    responseMimeType: "application/json",
+                    systemInstruction: workoutPrompt
+                },
+            })
+
+            const workoutText = (await response).text || ""
+
+            let plan = JSON.parse(workoutText);
+            plan = validateWorkoutPlan(workoutText)
+
+
+            
+      
+        } catch (e){
+
+        }
+    })
+});
 export default http;
 
