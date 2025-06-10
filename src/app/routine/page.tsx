@@ -8,30 +8,70 @@ import { Input } from "@/components/ui/input";
 const Routine = () => {
   const { user } = useUser();
   const messageContainerRef = useRef<HTMLDivElement>(null);
-const [messages, setMessages] = useState<any[]>([{role: "assistant", content: "Hello, tell me about your fitness goals!"}]);
+  const [messages, setMessages] = useState<any[]>([{role: "assistant", content: "Hello, before I create your personalized fitness plan, I want to know a few things about you!"}]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const fieldsToCollect = [
+    { key: "age", question: "What's your age?" },
+    { key: "height", question: "Thank you! Next, how tall are you? (in ft/in)" },
+    { key: "weight", question: "What's your weight? (in lbs)" },
+    { key: "injuries", question: "Do you have any injuries or physical limitations?" },
+    { key: "workout_days", question: "How many days per week can you work out?" },
+    { key: "fitness_goal", question: "What's your fitness goal? (e.g. build muscle, lose fat, build endurance)" },
+    { key: "fitness_level", question: "What's your current fitness level? (beginner, intermediate, advanced)" },
+    { key: "dietary_restrictions", question: "Any dietary restrictions? (e.g. vegan, lactose intolerant, none)" }
+  ];
+
+  const [userData, setUserData] = useState({});
+  const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
 
   const addMessage = (msg: any) => {
     setMessages((prev) => [...prev, msg]);
   };
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    addMessage({ role: "user", content: input });
-    setInput("");
-    setIsTyping(true);
+  const currentField = fieldsToCollect[currentFieldIndex];
+  const userReply = input.trim();
 
-    // AI response
+  
+  addMessage({ role: "user", content: userReply });
+  setInput("");
+  setIsTyping(true);
+
+  
+  const updatedData = {
+    ...userData,
+    [currentField.key]: userReply,
+  };
+  setUserData(updatedData);
+
+  
+  if (currentFieldIndex + 1 < fieldsToCollect.length) {
+    const nextField = fieldsToCollect[currentFieldIndex + 1];
     setTimeout(() => {
       addMessage({
         role: "assistant",
-        content: `Thanks for sharing: "${input}". Let's build on that.`,
+        content: nextField.question,
+      });
+      setCurrentFieldIndex((i) => i + 1);
+      setIsTyping(false);
+    }, 1000);
+  } else {
+    
+    setTimeout(() => {
+      addMessage({
+        role: "assistant",
+        content: "Thanks! I'm generating your personalized fitness & diet plan now...",
       });
       setIsTyping(false);
-    }, 1500);
-  };
+
+      // send stuff to backend and generate plans
+    }, 1000);
+  }
+};
+
 
   useEffect(() => {
     messageContainerRef.current?.scrollTo({
