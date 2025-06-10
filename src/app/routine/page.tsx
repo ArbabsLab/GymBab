@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 const Routine = () => {
   const { user } = useUser();
   const messageContainerRef = useRef<HTMLDivElement>(null);
-  const [messages, setMessages] = useState<any[]>([{role: "assistant", content: "Hello, before I create your personalized fitness plan, I want to know a few things about you!"}]);
+  const [messages, setMessages] = useState<any[]>([{role: "assistant", content: "Hello, before I create your personalized fitness plan, I want to know a few things about you! Ready?"}]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const fieldsToCollect = [
-    { key: "age", question: "What's your age?" },
+    { key: "age", question: "First, how old are you?" },
     { key: "height", question: "Thank you! Next, how tall are you? (in ft/in)" },
     { key: "weight", question: "What's your weight? (in lbs)" },
     { key: "injuries", question: "Do you have any injuries or physical limitations?" },
@@ -22,55 +22,90 @@ const Routine = () => {
     { key: "dietary_restrictions", question: "Any dietary restrictions? (e.g. vegan, lactose intolerant, none)" }
   ];
 
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({age: "21", weight: "150", injuries: "none", workout_days: "3", fitness_goal: "build muscle", fitness_level: "beginner"});
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
 
   const addMessage = (msg: any) => {
     setMessages((prev) => [...prev, msg]);
   };
 
-  const sendMessage = async () => {
-  if (!input.trim()) return;
+  const generatePlan = async (data: any) => {
+  try {
+    const res = await fetch("/generate-routine", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: user?.id,
+        age: data.age,
+        height: data.height,
+        weight: data.weight,
+        injuries: data.injuries,
+        workout_days: data.workout_days.split(",").map((day: string) => day.trim()),
+        fitness_goal: data.fitness_goal,
+        fitness_level: data.fitness_level,
+        dietary_restrictions: data.dietary_restrictions,
+      }),
+    });
 
-  const currentField = fieldsToCollect[currentFieldIndex];
-  const userReply = input.trim();
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to generate plan");
+    }
 
-  
-  addMessage({ role: "user", content: userReply });
-  setInput("");
-  setIsTyping(true);
-
-  
-  const updatedData = {
-    ...userData,
-    [currentField.key]: userReply,
-  };
-  setUserData(updatedData);
-
-  
-  if (currentFieldIndex + 1 < fieldsToCollect.length) {
-    const nextField = fieldsToCollect[currentFieldIndex + 1];
-    setTimeout(() => {
-      addMessage({
-        role: "assistant",
-        content: nextField.question,
-      });
-      setCurrentFieldIndex((i) => i + 1);
-      setIsTyping(false);
-    }, 1000);
-  } else {
-    
-    setTimeout(() => {
-      addMessage({
-        role: "assistant",
-        content: "Thanks! I'm generating your personalized fitness & diet plan now...",
-      });
-      setIsTyping(false);
-
-      // send stuff to backend and generate plans
-    }, 1000);
+    const result = await res.json();
+    return result.data; 
+  } catch (err) {
+    console.error("generatePlan error:", err);
+    throw err;
   }
 };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const currentField = fieldsToCollect[currentFieldIndex];
+    const userReply = input.trim();
+
+    
+    addMessage({ role: "user", content: userReply });
+    setInput("");
+    setIsTyping(true);
+
+    
+    const updatedData = {
+      ...userData,
+      [currentField.key]: userReply,
+    };
+    setUserData(updatedData);
+
+    
+    if (currentFieldIndex + 1 < fieldsToCollect.length) {
+      const Field = fieldsToCollect[currentFieldIndex];
+      setTimeout(() => {
+        addMessage({
+          role: "assistant",
+          content: Field.question,
+        });
+        setCurrentFieldIndex((i) => i + 1);
+        setIsTyping(false);
+      }, 1000);
+    } else {
+      
+      setTimeout(() => {
+        addMessage({
+          role: "assistant",
+          content: "Thanks! I'm generating your personalized fitness & diet plan now...",
+        });
+        setIsTyping(false);
+
+      // send stuff to backend and generate plans
+      console.log(userData);
+      generatePlan(userData);
+    }, 1000);
+  }
+  };
 
 
   useEffect(() => {

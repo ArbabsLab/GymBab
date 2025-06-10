@@ -253,7 +253,8 @@ DO NOT add any fields that are not in this example. Your response must be a vali
       return new Response(
         JSON.stringify({
           success: true,
-          planId,
+          data: {planId, workoutPlan, dietPlan}
+
         }),
         {
           status: 200,
