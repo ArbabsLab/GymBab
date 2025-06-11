@@ -22,7 +22,7 @@ const Routine = () => {
     { key: "dietary_restrictions", question: "Any dietary restrictions? (e.g. vegan, lactose intolerant, none)" }
   ];
 
-  const [userData, setUserData] = useState({age: "21", weight: "150", injuries: "none", workout_days: "3", fitness_goal: "build muscle", fitness_level: "beginner"});
+  const [userData, setUserData] = useState({age: "21", height: "5'9", weight: "150", injuries: "none", workout_days: "3", fitness_goal: "build muscle", fitness_level: "beginner"});
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
 
   const addMessage = (msg: any) => {
@@ -31,7 +31,7 @@ const Routine = () => {
 
   const generatePlan = async (data: any) => {
   try {
-    const res = await fetch("/generate-routine", {
+    const res = await fetch(`https://blessed-hound-377.convex.cloud/api/http/generate-routine`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,70 +42,98 @@ const Routine = () => {
         height: data.height,
         weight: data.weight,
         injuries: data.injuries,
-        workout_days: data.workout_days.split(",").map((day: string) => day.trim()),
+        workout_days: Array.isArray(data.workout_days)
+          ? data.workout_days
+          : data.workout_days.split(",").map((day: string) => day.trim()),
         fitness_goal: data.fitness_goal,
         fitness_level: data.fitness_level,
         dietary_restrictions: data.dietary_restrictions,
       }),
     });
 
+    // Read the body once as text
+    const text = await res.text();
+
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || "Failed to generate plan");
+      // Try parse JSON error from text
+      let errorMsg;
+      try {
+        const errorJson = JSON.parse(text);
+        errorMsg = errorJson.error || errorJson.message || JSON.stringify(errorJson);
+      } catch {
+        errorMsg = text;
+      }
+      throw new Error(errorMsg || "Failed to generate plan");
     }
 
-    const result = await res.json();
-    return result.data; 
+    // If success, parse JSON data
+    const result = JSON.parse(text);
+    return result.data;
   } catch (err) {
     console.error("generatePlan error:", err);
     throw err;
   }
 };
 
+
+
   const sendMessage = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    const currentField = fieldsToCollect[currentFieldIndex];
-    const userReply = input.trim();
+  const currentField = fieldsToCollect[currentFieldIndex];
+  const userReply = input.trim();
 
-    
-    addMessage({ role: "user", content: userReply });
-    setInput("");
-    setIsTyping(true);
+  addMessage({ role: "user", content: userReply });
+  setInput("");
+  setIsTyping(true);
 
-    
-    const updatedData = {
-      ...userData,
-      [currentField.key]: userReply,
-    };
-    setUserData(updatedData);
+  const updatedData = {
+    ...userData,
+    [currentField.key]: userReply,
+  };
+  setUserData(updatedData);
 
-    
-    if (currentFieldIndex + 1 < fieldsToCollect.length) {
-      const Field = fieldsToCollect[currentFieldIndex];
-      setTimeout(() => {
-        addMessage({
-          role: "assistant",
-          content: Field.question,
-        });
-        setCurrentFieldIndex((i) => i + 1);
-        setIsTyping(false);
-      }, 1000);
-    } else {
-      
-      setTimeout(() => {
-        addMessage({
-          role: "assistant",
-          content: "Thanks! I'm generating your personalized fitness & diet plan now...",
-        });
-        setIsTyping(false);
+  const nextIndex = currentFieldIndex + 1;
 
-      // send stuff to backend and generate plans
-      console.log(userData);
-      generatePlan(userData);
+  if (nextIndex < fieldsToCollect.length) {
+    const nextField = fieldsToCollect[nextIndex];
+    setTimeout(() => {
+      addMessage({
+        role: "assistant",
+        content: nextField.question,
+      });
+      setCurrentFieldIndex(nextIndex);
+      setIsTyping(false);
+    }, 1000);
+  } else {
+    setTimeout(async () => {
+      addMessage({
+        role: "assistant",
+        content: "Thanks! I'm generating your personalized fitness & diet plan now...",
+      });
+      setIsTyping(false);
+
+      // Send stuff to backend and generate plans
+      console.log(updatedData);
+      try {
+        const response = await generatePlan({ ...updatedData });
+        console.log("Plan response:", response);
+        // You can handle the response here to show the plan
+      } catch (err) {
+        console.error("Error generating plan:", err);
+      }
     }, 1000);
   }
-  };
+};
+
+  useEffect(() => {
+  // Send the first assistant message when the chat opens
+  if (messages.length === 1 && messages[0].role === "assistant") {
+    setTimeout(() => {
+      addMessage({ role: "assistant", content: fieldsToCollect[0].question });
+    }, 500);
+  }
+}, []);
 
 
   useEffect(() => {

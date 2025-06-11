@@ -116,6 +116,8 @@ function validateDietPlan(plan: any) {
   return validatedPlan;
 }
 
+
+
 http.route({
   path: "/generate-routine",
   method: "POST",
@@ -135,6 +137,7 @@ http.route({
         dietary_restrictions,
       } = payload;
 
+      // --- Workout prompt & Gemini call ---
       const workoutPrompt = `You are a fitness coach creating a personalized workout plan based on:
 Age: ${age}
 Height: ${height}
@@ -179,7 +182,7 @@ DO NOT add any fields that are not in this example. Your response must be a vali
 
       const workoutResponse = await ai.models.generateContent({
         model: "gemini-2.0-flash",
-        contents: "",
+        contents: workoutPrompt,
         config: {
           temperature: 0.2,
           topP: 0.9,
@@ -187,10 +190,16 @@ DO NOT add any fields that are not in this example. Your response must be a vali
           systemInstruction: workoutPrompt,
         },
       });
+      console.log("Gemini raw workout:", workoutResponse.text);
 
-      const workoutText = workoutResponse.text || "";
-      const workoutPlan = validateWorkoutPlan(JSON.parse(workoutText));
+      let workoutPlan;
+      try {
+        workoutPlan = validateWorkoutPlan(JSON.parse(workoutResponse.text || "{}"));
+      } catch (e) {
+        throw new Error("Invalid workout plan JSON from AI");
+      }
 
+      // --- Diet prompt & Gemini call ---
       const dietPrompt = `You are an experienced nutrition coach creating a personalized diet plan based on:
 Age: ${age}
 Height: ${height}
@@ -230,7 +239,7 @@ DO NOT add any fields that are not in this example. Your response must be a vali
 
       const dietResponse = await ai.models.generateContent({
         model: "gemini-2.0-flash",
-        contents: "",
+        contents: dietPrompt,
         config: {
           temperature: 0.2,
           topP: 0.9,
@@ -238,10 +247,16 @@ DO NOT add any fields that are not in this example. Your response must be a vali
           systemInstruction: dietPrompt,
         },
       });
+      console.log("Gemini raw diet:", dietResponse.text);
 
-      const dietPlanText = dietResponse.text || "";
-      const dietPlan = validateDietPlan(JSON.parse(dietPlanText));
+      let dietPlan;
+      try {
+        dietPlan = validateDietPlan(JSON.parse(dietResponse.text || "{}"));
+      } catch (e) {
+        throw new Error("Invalid diet plan JSON from AI");
+      }
 
+      // --- Save plan in DB ---
       const planId = await ctx.runMutation(api.plans.createPlan, {
         userId: user_id,
         dietPlan,
@@ -250,15 +265,20 @@ DO NOT add any fields that are not in this example. Your response must be a vali
         name: `${fitness_goal} Plan - ${new Date().toLocaleDateString()}`,
       });
 
+      // --- Respond with CORS headers ---
       return new Response(
         JSON.stringify({
           success: true,
-          data: {planId, workoutPlan, dietPlan}
-
+          data: { planId, workoutPlan, dietPlan },
         }),
         {
           status: 200,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
         }
       );
     } catch (error) {
@@ -270,12 +290,19 @@ DO NOT add any fields that are not in this example. Your response must be a vali
         }),
         {
           status: 500,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
         }
       );
     }
   }),
 });
+
+
 
 export default http;
 

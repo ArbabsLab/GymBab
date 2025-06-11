@@ -20,7 +20,7 @@ const NoFitnessPlan = () => {
         asChild
         className="relative overflow-hidden bg-primary text-primary-foreground px-8 py-6 text-lg font-medium"
       >
-        <Link href="/generate-program">
+        <Link href="/routine">
           <span className="relative flex items-center">
             Create Your First Plan
             <ArrowRightIcon className="ml-2 h-5 w-5" />
