@@ -117,7 +117,20 @@ function validateDietPlan(plan: any) {
 }
 
 
-
+http.route({
+  path: "/generate-routine",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // Replace with specific origin if needed
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }),
+});
 http.route({
   path: "/generate-routine",
   method: "POST",
@@ -190,7 +203,7 @@ DO NOT add any fields that are not in this example. Your response must be a vali
           systemInstruction: workoutPrompt,
         },
       });
-      console.log("Gemini raw workout:", workoutResponse.text);
+
 
       let workoutPlan;
       try {
@@ -247,8 +260,7 @@ DO NOT add any fields that are not in this example. Your response must be a vali
           systemInstruction: dietPrompt,
         },
       });
-      console.log("Gemini raw diet:", dietResponse.text);
-
+      
       let dietPlan;
       try {
         dietPlan = validateDietPlan(JSON.parse(dietResponse.text || "{}"));
@@ -299,6 +311,23 @@ DO NOT add any fields that are not in this example. Your response must be a vali
         }
       );
     }
+  }),
+});
+
+http.route({
+  path: "/hello",
+  method: "GET",
+  handler: httpAction(async () => {
+    return new Response(
+      JSON.stringify({ message: "Hello, world!" }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   }),
 });
 

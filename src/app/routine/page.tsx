@@ -31,7 +31,7 @@ const Routine = () => {
 
   const generatePlan = async (data: any) => {
   try {
-    const res = await fetch(`https://blessed-hound-377.convex.cloud/api/http/generate-routine`, {
+    const res = await fetch(`https://blessed-hound-377.convex.site/generate-routine`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +51,7 @@ const Routine = () => {
       }),
     });
 
-    // Read the body once as text
+    
     const text = await res.text();
 
     if (!res.ok) {
