@@ -1,20 +1,24 @@
 <h1 align="center">GymBab: AI Fitness Routine Tool</h1>
 
-![Demo App](/public/readme.png)
 
 - Tech stack: Next.js, React, Tailwind & Shadcn UI
-- Authentication (Clerk)
-- LLM Integration (Gemini)
+- Database: Convex
+- Authentication: Clerk
+- LLM Integration: Gemini
 
+## Motivation
+
+Fitness is a huge part of my life and I often find myself unsure of what workouts to do depending on what my goals are at that certain moment. 
+This application solves that problem by generating and organizing my routines based on what I set as my goals.
 
 ## Features
 
-- **Smart AI Assistant**: Engage with an AI that cares about your fitness goals, physical condition, and preferences
-- **Personalized Workout Plans**: Get custom exercise routines based on your fitness level, injuries, and goals
-- **Diet Recommendations**: Receive personalized meal plans accounting for your allergies and dietary preferences
-- **User Authentication**: Sign in with GitHub, Google, or email/password
-- **Program Management**: Create and view multiple fitness programs with only the latest one active
-- **Responsive Design**: Beautiful UI that works across all devices
+- **Gymbab AI Assistant**: Engage with Gymbab AI, a chatbot that asks you the right questions to deliver your personalized fitness plan
+- **AI Generated Workout Plans**: Get personalized exercise routines based on your fitness level, injuries, and goals
+- **Diet Generation**: Receive personalized meal plans accounting for your dietary preferences
+- **User Authentication**: Sign in seamlessly with Clerk
+- **Routines**: Create and view multiple fitness routines 
+- **Responsive Design**: UI that works across multiple devices (Web recommended)
 
 ## Setup .env file
 
@@ -56,14 +60,6 @@ npm run dev
 
 ## Deployment
 
-This application can be easily deployed to Vercel:
-
-```shell
-npm run build
-npm run start
-```
-
-Or connect your GitHub repository to Vercel for automatic deployments.
 
 
 
