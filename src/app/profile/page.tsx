@@ -24,10 +24,10 @@ const ProfilePage = () => {
   const allPlans = useQuery(api.plans.getUserPlans, { userId });
   const [selectedPlanId, setSelectedPlanId] = useState<null | string>(null);
 
-  const activePlan = allPlans?.find((plan: any) => plan.isActive);
+  const activePlan = allPlans?.find((plan) => plan.isActive);
 
   const currentPlan = selectedPlanId
-    ? allPlans?.find((plan: any) => plan._id === selectedPlanId)
+    ? allPlans?.find((plan) => plan._id === selectedPlanId)
     : activePlan;
 
   return (
@@ -50,7 +50,7 @@ const ProfilePage = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {allPlans.map((plan: any) => (
+              {allPlans.map((plan) => (
                 <Button
                   key={plan._id}
                   onClick={() => setSelectedPlanId(plan._id)}
@@ -113,7 +113,7 @@ const ProfilePage = () => {
                     </div>
 
                     <Accordion type="multiple" className="space-y-4">
-                      {currentPlan.workoutPlan.exercises.map((exerciseDay: any, index: any) => (
+                      {currentPlan.workoutPlan.exercises.map((exerciseDay, index) => (
                         <AccordionItem
                           key={index}
                           value={exerciseDay.day}
@@ -130,7 +130,7 @@ const ProfilePage = () => {
 
                           <AccordionContent className="pb-4 px-4">
                             <div className="space-y-3 mt-2">
-                              {exerciseDay.routines.map((routine: any, routineIndex: number) => (
+                              {exerciseDay.routines.map((routine, routineIndex: number) => (
                                 <div
                                   key={routineIndex}
                                   className="border border-border rounded p-3 bg-background/50"
@@ -177,7 +177,7 @@ const ProfilePage = () => {
                     <div className="h-px w-full bg-border my-4"></div>
 
                     <div className="space-y-4">
-                      {currentPlan.dietPlan.meals.map((meal: any, index: any) => (
+                      {currentPlan.dietPlan.meals.map((meal, index) => (
                         <div
                           key={index}
                           className="border border-border rounded-lg overflow-hidden p-4"
@@ -187,7 +187,7 @@ const ProfilePage = () => {
                             <h4 className="font-mono text-primary">{meal.name}</h4>
                           </div>
                           <ul className="space-y-2">
-                            {meal.foods.map((food: any, foodIndex: any) => (
+                            {meal.foods.map((food, foodIndex) => (
                               <li
                                 key={foodIndex}
                                 className="flex items-center gap-2 text-sm text-muted-foreground"

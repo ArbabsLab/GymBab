@@ -25,11 +25,11 @@ const Routine = () => {
   const [userData, setUserData] = useState({age: "21", height: "5'9", weight: "150", injuries: "none", workout_days: "3", fitness_goal: "build muscle", fitness_level: "beginner"});
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
 
-  const addMessage = (msg: any) => {
+  const addMessage = (msg: { role: string; content: string; }) => {
     setMessages((prev) => [...prev, msg]);
   };
 
-  const generatePlan = async (data: any) => {
+  const generatePlan = async (data: { age: any; height: any; weight: any; injuries: any; workout_days: any; fitness_goal: any; fitness_level: any; dietary_restrictions?: any; }) => {
   try {
     const res = await fetch(`${process.env.CONVEX_API_URL}/generate-routine`, {
       method: "POST",
