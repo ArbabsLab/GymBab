@@ -1,5 +1,6 @@
 <h1 align="center">GymBab: AI Fitness Routine Tool</h1>
 
+<a href="https://gym-bab.vercel.app/">Link: https://gym-bab.vercel.app/</a>
 
 - Tech stack: Next.js, React, Tailwind & Shadcn UI
 - Database: Convex
