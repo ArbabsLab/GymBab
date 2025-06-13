@@ -31,7 +31,7 @@ const Routine = () => {
 
   const generatePlan = async (data: { age: any; height: any; weight: any; injuries: any; workout_days: any; fitness_goal: any; fitness_level: any; dietary_restrictions?: any; }) => {
   try {
-    const res = await fetch(`${process.env.CONVEX_API_URL}/generate-routine`, {
+    const res = await fetch(`https://blessed-hound-377.convex.site/generate-routine`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
